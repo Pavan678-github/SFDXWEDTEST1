@@ -1,0 +1,37 @@
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- script: |
+    npm install sfdx-cli --location=global
+    sfdx plugins --core
+    sfdx --version
+   #install sfdx-cli
+   # wget -qO- ${DX_CLI_URL_CUSTOM-$CLIURL} | tar xJ -C ~/sfdx --strip-components 1
+    #export PATH=~/sfdx/bin:$PATH
+   # sfdx --version
+    #sfdx plugins --core
+
+
+- script: |
+    echo $(authtoken)
+    echo $(authtoken) > file.txt
+    echo $(SFDC_URL) > file.txt
+    sfdx auth:sfdxurl:store -a dev -f file.txt
+    #sfdx auth:sfdxurl:store -f file.txt --setalias=dev
+    #sfdx auth:sfdxurl:store -f <path to sfdxAuthUrl file>
+    #sfdx force:auth:sfdxurl:store -f test.txt --setalias=dev
+    rm -rf file.txt
+  displayName: authenticate with dev hub
+#- script: |
+    #sfdx force:org:create orgName=testorg --definitionfile config/project-scratch-def.json -a dev1 --setdefaultdevhubusername
+ # displayName: Scratchorg creation
+#- script: |
+#    sfdx force:org:force:org:list
+ # displayName: org list 
+- script: |
+    sfdx force:source:deploy -p force-app/main/default -u dev
+  displayName: deploying the code
