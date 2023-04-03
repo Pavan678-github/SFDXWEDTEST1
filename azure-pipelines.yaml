@@ -16,22 +16,86 @@ steps:
     #sfdx plugins --core
 
 
-- script: |
-    echo $(authtoken)
-    echo $(authtoken) > file.txt
-    echo $(SFDC_URL) > file.txt
-    sfdx auth:sfdxurl:store -a dev -f file.txt
+#- script: |
+    #echo $(authtoken)
+    #echo $(authtoken) > file.txt
+    #echo $(SFDC_URL) > file.txt
+    #sfdx auth:sfdxurl:store -a dev -f file.txt
     #sfdx auth:sfdxurl:store -f file.txt --setalias=dev
     #sfdx auth:sfdxurl:store -f <path to sfdxAuthUrl file>
     #sfdx force:auth:sfdxurl:store -f test.txt --setalias=dev
-    rm -rf file.txt
-  displayName: authenticate with dev hub
+    #rm -rf file.txt
+  #displayName: authenticate with dev hub
+
+- script: |    
+    echo "Storing auth URL"
+    echo $(CICDDEVINT_BASE_PACKAGE_AUTH_URL) > auth.txt
+    sfdx force:auth:sfdxurl:store --sfdxurlfile=auth.txt --setalias=devhub --setdefaultdevhubusername
+    #rm -rf file.txt
+  displayName: Authenticating with dev hub
+
 #- script: |
     #sfdx force:org:create orgName=testorg --definitionfile config/project-scratch-def.json -a dev1 --setdefaultdevhubusername
- # displayName: Scratchorg creation
-#- script: |
-#    sfdx force:org:force:org:list
- # displayName: org list 
+  #displayName: Scratchorg creation 
+- script: |     
+    echo "Printing the directort content"
+    ls -l
+    echo "Printing current directory path"
+    pwd
+    echo "Creating scratch org"
+    sfdx force:org:create orgName=CICDOrg -f config/project-scratch-def.json -w 120 -n --durationdays 1 -a CICDOrg --setdefaultusername
+  displayName: Creating scratch org
+
+- script: |          
+    echo 'Importing scratch org'
+    #cci org import CICDOrg CICDOrg
+    echo "Copying files"
+    #cp -r unpackaged/force-app/main/default/certs force-app/main/default
+    cp -r force-app/main/default/certs force-app/main/default
+    echo "Pushing code to scratch org"
+    #cci task run dx_push --org CICDOrg
+    echo "Deleting files"
+    rm -rf force-app/main/default/certs
+  displayName: Pushing source code
+
+- script: |
+    sfdx force:org:force:org:list
+  displayName: org list 
+
 - script: |
     sfdx force:source:deploy -p force-app/main/default -u dev
   displayName: deploying the code
+
+- script: |
+    echo "Listing packages"
+    sfdx force:package:list
+    echo "Listing packages"
+    sfdx force:package:version:list
+  displayName: Creating package
+
+
+- script: |  
+    echo "Creating package version"
+    sfdx force:package:version:create --package DelightIQCICD --installationkey "\Q8bS7^<" --wait 10
+  displayName: Creating package version
+
+- script: |  
+    echo "Printing sfdx-project.json file"
+    cat sfdx-project.json
+  displayName: Printing the content of sfdx-project.json file  
+
+
+- script: |
+      git config --global user.name 'Pavan678'
+      git config --global user.email 'Pavan678-github@users.noreply.github.com'
+      git add sfdx-project.json
+      git commit -m "Updated sfdx-project.json file"
+      git push
+      echo "Push completed"
+  displayName:  Pushing sfdx-project.json file to repo
+
+- script: |
+      if: always()
+      echo "Deleting scratch org"
+      sfdx force:org:delete -u CICDOrg --noprompt
+  displayName: Deleting the scratch org
