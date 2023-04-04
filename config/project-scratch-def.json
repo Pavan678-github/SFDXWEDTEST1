@@ -8,6 +8,15 @@
     },
     "mobileSettings": {
       "enableS1EncryptedStoragePref2": false
+    },
+    "languageSettings": {
+      "enableTranslationWorkbench": true,
+      "enableEndUserLanguages": true,
+      "enablePlatformLanguages": true
+      },
+      "AccountSettings": { 
+        "enableContactHistoryTracking": true,
+         "enableAccountHistoryTracking" : true
     }
   }
 }
